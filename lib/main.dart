@@ -12,7 +12,6 @@ import 'package:flutter_icons/flutter_icons.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:toast/toast.dart';
-import 'package:undo/undo.dart';
 import 'controller.dart';
 import 'created_classes/options.dart';
 import 'created_widgets/more_button.dart';
