@@ -43,7 +43,7 @@ class _DrawingPageState extends State<DrawingPage> {
           const SafeArea(
             child: Text(
               "Colours",
-              style: TextStyle(fontSize: 20),
+              style: TextStyle(fontSize: 40),
             ),
           ),
           GestureDetector(
