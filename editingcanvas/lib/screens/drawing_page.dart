@@ -30,7 +30,6 @@ class _DrawingPageState extends State<DrawingPage> {
     Colors.purple,
   ];
   bool isDrawing = false;
-
   Future<void> _pickImage() async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -151,14 +150,16 @@ class _DrawingPageState extends State<DrawingPage> {
           ),
           GestureDetector(
             behavior: HitTestBehavior.deferToChild,
-            onScaleStart: (details) {
+            onPanStart: (details) {
               setState(() {
                 isDrawing = true;
+                final transformedPosition =
+                    details.localPosition; // Use details.localPosition
                 currentDrawingPoint = DrawingPoint(
                   id: DateTime.now().microsecondsSinceEpoch,
                   offsets: [
-                    details.focalPoint,
-                  ],
+                    transformedPosition
+                  ], // Use the transformed position
                   color: selectedColor,
                   width: selectedWidth,
                 );
@@ -168,21 +169,24 @@ class _DrawingPageState extends State<DrawingPage> {
                 historyDrawingPoints = List.of(drawingPoints);
               });
             },
-            onScaleUpdate: (details) {
+            onPanUpdate: (details) {
               if (isDrawing) {
                 setState(() {
                   if (currentDrawingPoint == null) return;
 
+                  final transformedPosition =
+                      details.localPosition; // Use details.localPosition
                   currentDrawingPoint = currentDrawingPoint?.copyWith(
                     offsets: currentDrawingPoint!.offsets
-                      ..add(details.focalPoint),
+                      ..add(
+                          transformedPosition), // Use the transformed position
                   );
                   drawingPoints.last = currentDrawingPoint!;
                   historyDrawingPoints = List.of(drawingPoints);
                 });
               }
             },
-            onScaleEnd: (details) {
+            onPanEnd: (details) {
               isDrawing = false;
               currentDrawingPoint = null;
             },
