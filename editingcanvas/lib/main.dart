@@ -18,10 +18,11 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
         appBarTheme: const AppBarTheme(
           backgroundColor: Color.fromARGB(255, 84, 128, 224),
-          elevation: 0,
           iconTheme: IconThemeData(color: Colors.black),
         ),
       ),
+      darkTheme: ThemeData(backgroundColor: Colors.black),
+      themeMode: ThemeMode.dark,
       home: DrawingPage(),
     );
   }
