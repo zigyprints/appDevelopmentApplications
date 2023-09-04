@@ -4,6 +4,7 @@ import 'package:editingcanvas/widgets/drawing_painter.dart';
 import 'dart:math';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:image_cropper/image_cropper.dart';
 
 import 'package:editingcanvas/router.dart';
 
@@ -29,6 +30,7 @@ class _DrawingPageState extends State<DrawingPage> {
     Colors.purple,
   ];
   bool isDrawing = false;
+
   Future<void> _pickImage() async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -148,13 +150,14 @@ class _DrawingPageState extends State<DrawingPage> {
             ),
           ),
           GestureDetector(
-            onPanStart: (details) {
+            behavior: HitTestBehavior.deferToChild,
+            onScaleStart: (details) {
               setState(() {
                 isDrawing = true;
                 currentDrawingPoint = DrawingPoint(
                   id: DateTime.now().microsecondsSinceEpoch,
                   offsets: [
-                    details.localPosition,
+                    details.focalPoint,
                   ],
                   color: selectedColor,
                   width: selectedWidth,
@@ -165,21 +168,21 @@ class _DrawingPageState extends State<DrawingPage> {
                 historyDrawingPoints = List.of(drawingPoints);
               });
             },
-            onPanUpdate: (details) {
+            onScaleUpdate: (details) {
               if (isDrawing) {
                 setState(() {
                   if (currentDrawingPoint == null) return;
 
                   currentDrawingPoint = currentDrawingPoint?.copyWith(
                     offsets: currentDrawingPoint!.offsets
-                      ..add(details.localPosition),
+                      ..add(details.focalPoint),
                   );
                   drawingPoints.last = currentDrawingPoint!;
                   historyDrawingPoints = List.of(drawingPoints);
                 });
               }
             },
-            onPanEnd: (_) {
+            onScaleEnd: (details) {
               isDrawing = false;
               currentDrawingPoint = null;
             },
