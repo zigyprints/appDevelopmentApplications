@@ -2,17 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:editingcanvas/model/drawing_point.dart';
 import 'package:editingcanvas/widgets/drawing_painter.dart';
 import 'dart:math';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 import 'package:editingcanvas/router.dart';
 
 class DrawingPage extends StatefulWidget {
   const DrawingPage({super.key});
   static const String routeName = '/drawing';
+
   @override
   State<DrawingPage> createState() => _DrawingPageState();
 }
 
 class _DrawingPageState extends State<DrawingPage> {
+  File? backgroundImage; // Define the backgroundImage variable
+
   var availableColour = [
     Colors.black,
     Colors.red,
@@ -24,6 +29,16 @@ class _DrawingPageState extends State<DrawingPage> {
     Colors.purple,
   ];
   bool isDrawing = false;
+  Future<void> _pickImage() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        backgroundImage = File(pickedFile.path);
+      });
+    }
+  }
+
   // Method to draw a circle
   void drawCircle() {
     setState(() {
@@ -48,6 +63,12 @@ class _DrawingPageState extends State<DrawingPage> {
 
       drawingPoints.add(circleDrawingPoint);
       historyDrawingPoints = List.of(drawingPoints);
+    });
+  }
+
+  void clearBackgroundImage() {
+    setState(() {
+      backgroundImage = null;
     });
   }
 
@@ -114,13 +135,16 @@ class _DrawingPageState extends State<DrawingPage> {
       ),
       body: Stack(
         children: [
+          if (backgroundImage != null)
+            Positioned.fill(
+              child: Image.file(
+                backgroundImage!,
+                fit: BoxFit.cover,
+              ),
+            ),
           const SafeArea(
             child: Padding(
               padding: EdgeInsets.all(8.0),
-              child: Text(
-                "Colours",
-                style: TextStyle(fontSize: 40),
-              ),
             ),
           ),
           GestureDetector(
@@ -170,7 +194,7 @@ class _DrawingPageState extends State<DrawingPage> {
             ),
           ),
           Positioned(
-            top: 60,
+            top: 20,
             left: 16,
             right: 16,
             child: SizedBox(
@@ -225,74 +249,102 @@ class _DrawingPageState extends State<DrawingPage> {
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.all(50.0),
+            child: Row(
+              children: [],
+            ),
+          ),
         ],
       ),
-      floatingActionButton: Row(
+      floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          const SizedBox(width: 8),
-          FloatingActionButton(
-            heroTag: "Undo",
-            onPressed: () {
-              if (drawingPoints.isNotEmpty && historyDrawingPoints.isNotEmpty) {
-                setState(() {
-                  drawingPoints.removeLast();
-                });
-              }
-            },
-            child: const Icon(Icons.undo),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              const SizedBox(width: 8),
+              FloatingActionButton(
+                heroTag: "Circle",
+                onPressed: drawCircle,
+                child: const Icon(Icons.circle_outlined),
+              ),
+              const SizedBox(width: 8),
+              // Button to draw a rectangle
+              FloatingActionButton(
+                heroTag: "Rectangle",
+                onPressed: drawRectangle,
+                child: const Icon(Icons.crop_square),
+              ),
+              const SizedBox(width: 8),
+              // Button to draw a triangle
+              FloatingActionButton(
+                heroTag: "Triangle",
+                onPressed: drawTriangle,
+                child: const Icon(Icons.change_history),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          FloatingActionButton(
-            heroTag: "Redo",
-            onPressed: () {
-              setState(() {
-                if (drawingPoints.length < historyDrawingPoints.length) {
-                  final index = drawingPoints.length;
-                  drawingPoints.add(historyDrawingPoints[index]);
-                }
-              });
-            },
-            child: const Icon(Icons.redo),
+          SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              const SizedBox(width: 8),
+              FloatingActionButton(
+                onPressed:
+                    _pickImage, // Call the _pickImage function when the button is pressed
+                child: const Icon(Icons.image),
+              ),
+              const SizedBox(width: 8),
+              FloatingActionButton(
+                onPressed: clearBackgroundImage,
+                child: const Icon(Icons.clear),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          FloatingActionButton(
-            heroTag: "Clear",
-            onPressed: () {
-              setState(() {
-                drawingPoints.clear();
-                historyDrawingPoints.clear();
-              });
-            },
-            child: const Icon(Icons.clear),
+          SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              const SizedBox(width: 8),
+              FloatingActionButton(
+                heroTag: "Undo",
+                onPressed: () {
+                  if (drawingPoints.isNotEmpty &&
+                      historyDrawingPoints.isNotEmpty) {
+                    setState(() {
+                      drawingPoints.removeLast();
+                    });
+                  }
+                },
+                child: const Icon(Icons.undo),
+              ),
+              const SizedBox(width: 8),
+              FloatingActionButton(
+                heroTag: "Redo",
+                onPressed: () {
+                  setState(() {
+                    if (drawingPoints.length < historyDrawingPoints.length) {
+                      final index = drawingPoints.length;
+                      drawingPoints.add(historyDrawingPoints[index]);
+                    }
+                  });
+                },
+                child: const Icon(Icons.redo),
+              ),
+              const SizedBox(width: 8),
+              FloatingActionButton(
+                heroTag: "Clear",
+                onPressed: () {
+                  setState(() {
+                    drawingPoints.clear();
+                    historyDrawingPoints.clear();
+                  });
+                },
+                child: const Icon(Icons.clear),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          FloatingActionButton(
-            heroTag: "Circle",
-            onPressed: drawCircle,
-            child: const Icon(Icons.circle_outlined),
-          ),
-          const SizedBox(width: 8),
-          // Button to draw a rectangle
-          FloatingActionButton(
-            heroTag: "Rectangle",
-            onPressed: drawRectangle,
-            child: const Icon(Icons.crop_square),
-          ),
-          const SizedBox(width: 8),
-          // Button to draw a triangle
-          FloatingActionButton(
-            heroTag: "Triangle",
-            onPressed: drawTriangle,
-            child: const Icon(Icons.change_history),
-          ),
-
-          // Button to draw an oval
-          /* FloatingActionButton(
-            heroTag: "Oval",
-            onPressed: drawOval,
-            child: const Icon(Icons.ellipse),
-          ), */
         ],
       ),
     );

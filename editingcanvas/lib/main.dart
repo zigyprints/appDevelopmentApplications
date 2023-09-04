@@ -16,14 +16,13 @@ class MyApp extends StatelessWidget {
       title: 'Colours',
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color.fromARGB(255, 84, 128, 224),
-          iconTheme: IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(
+          color: Colors.black, // Icon color
         ),
       ),
       darkTheme: ThemeData(backgroundColor: Colors.black),
       themeMode: ThemeMode.dark,
-      home: DrawingPage(),
+      home: const DrawingPage(),
     );
   }
 }
