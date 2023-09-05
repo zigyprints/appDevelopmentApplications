@@ -1,11 +1,16 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:editingcanvas/model/drawing_point.dart';
 import 'package:editingcanvas/widgets/drawing_painter.dart';
+import 'package:editingcanvas/providers/drawing_provider.dart';
 import 'dart:math';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:image_cropper/image_cropper.dart';
-
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:editingcanvas/router.dart';
 
 class DrawingPage extends StatefulWidget {
@@ -17,7 +22,8 @@ class DrawingPage extends StatefulWidget {
 }
 
 class _DrawingPageState extends State<DrawingPage> {
-  File? backgroundImage; // Define the backgroundImage variable
+  File? backgroundImage;
+  Color selectedColor = Colors.black;
 
   var availableColour = [
     Colors.black,
@@ -30,7 +36,30 @@ class _DrawingPageState extends State<DrawingPage> {
     Colors.purple,
   ];
   bool isDrawing = false;
+  Future<void> fetchImageFromServer() async {
+    final imageUrl =
+        'https://fastly.picsum.photos/id/12/2500/1667.jpg?hmac=Pe3284luVre9ZqNzv1jMFpLihFI6lwq7TPgMSsNXw2w'; // Replace with your image URL
+    final response = await http.get(Uri.parse(imageUrl));
+
+    if (response.statusCode == 200) {
+      final bytes = response.bodyBytes;
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/background_image.png');
+
+      await tempFile.writeAsBytes(bytes);
+
+      setState(() {
+        backgroundImage = tempFile;
+      });
+    } else {
+      // Handle error
+      print('Failed to fetch image: ${response.statusCode}');
+    }
+  }
+
   Future<void> _pickImage() async {
+    await fetchImageFromServer();
+
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -123,7 +152,6 @@ class _DrawingPageState extends State<DrawingPage> {
   var drawingPoints = <DrawingPoint>[];
   DrawingPoint? currentDrawingPoint;
 
-  var selectedColor = Colors.black;
   var selectedWidth = 2.0;
   @override
   Widget build(BuildContext context) {
@@ -150,16 +178,18 @@ class _DrawingPageState extends State<DrawingPage> {
           ),
           GestureDetector(
             behavior: HitTestBehavior.deferToChild,
-            onPanStart: (details) {
+            onScaleStart: (details) {
               setState(() {
                 isDrawing = true;
-                final transformedPosition =
-                    details.localPosition; // Use details.localPosition
+                final RenderBox renderBox =
+                    context.findRenderObject() as RenderBox;
+                final points = <Offset>[
+                  renderBox.globalToLocal(details.focalPoint)
+                ];
+
                 currentDrawingPoint = DrawingPoint(
                   id: DateTime.now().microsecondsSinceEpoch,
-                  offsets: [
-                    transformedPosition
-                  ], // Use the transformed position
+                  offsets: points,
                   color: selectedColor,
                   width: selectedWidth,
                 );
@@ -169,24 +199,25 @@ class _DrawingPageState extends State<DrawingPage> {
                 historyDrawingPoints = List.of(drawingPoints);
               });
             },
-            onPanUpdate: (details) {
+            onScaleUpdate: (details) {
               if (isDrawing) {
                 setState(() {
                   if (currentDrawingPoint == null) return;
 
-                  final transformedPosition =
-                      details.localPosition; // Use details.localPosition
+                  final RenderBox renderBox =
+                      context.findRenderObject() as RenderBox;
+                  final Offset localPosition =
+                      renderBox.globalToLocal(details.focalPoint);
+
                   currentDrawingPoint = currentDrawingPoint?.copyWith(
-                    offsets: currentDrawingPoint!.offsets
-                      ..add(
-                          transformedPosition), // Use the transformed position
+                    offsets: [...currentDrawingPoint!.offsets, localPosition],
                   );
                   drawingPoints.last = currentDrawingPoint!;
                   historyDrawingPoints = List.of(drawingPoints);
                 });
               }
             },
-            onPanEnd: (details) {
+            onScaleEnd: (details) {
               isDrawing = false;
               currentDrawingPoint = null;
             },
@@ -304,9 +335,46 @@ class _DrawingPageState extends State<DrawingPage> {
               ),
               const SizedBox(width: 8),
               FloatingActionButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Pick a color'),
+                        content: SingleChildScrollView(
+                          child: ColorPicker(
+                            pickerColor: selectedColor,
+                            onColorChanged: (Color color) {
+                              setState(() {
+                                selectedColor = color;
+                              });
+                            },
+                            showLabel: true, // Show the color value label
+                            pickerAreaHeightPercent:
+                                0.8, // Adjust the color wheel size
+                          ),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text('OK'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                child:
+                    Icon(Icons.palette), // Replace with your color wheel icon
+              ),
+              SizedBox(width: 8),
+              FloatingActionButton(
                 onPressed: clearBackgroundImage,
                 child: const Icon(Icons.clear),
               ),
+              SizedBox(height: 8),
             ],
           ),
           SizedBox(height: 8),
