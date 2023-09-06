@@ -12,6 +12,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:editingcanvas/router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DrawingPage extends StatefulWidget {
   const DrawingPage({super.key});
@@ -36,9 +37,34 @@ class _DrawingPageState extends State<DrawingPage> {
     Colors.purple,
   ];
   bool isDrawing = false;
+  Future<void> saveUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('selectedColor', selectedColor.value);
+    await prefs.setDouble('selectedWidth', selectedWidth);
+  }
+
+  Future<void> loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? colorValue = prefs.getInt('selectedColor');
+    double? widthValue = prefs.getDouble('selectedWidth');
+
+    if (colorValue != null) {
+      setState(() {
+        selectedColor = Color(colorValue);
+      });
+    }
+
+    if (widthValue != null) {
+      setState(() {
+        selectedWidth = widthValue;
+      });
+      saveUserData();
+    }
+  }
+
   Future<void> fetchImageFromServer() async {
-    final imageUrl =
-        'https://fastly.picsum.photos/id/12/2500/1667.jpg?hmac=Pe3284luVre9ZqNzv1jMFpLihFI6lwq7TPgMSsNXw2w'; // Replace with your image URL
+    const imageUrl =
+        'https://fastly.picsum.photos/id/12/2500/1667.jpg?hmac=Pe3284luVre9ZqNzv1jMFpLihFI6lwq7TPgMSsNXw2w';
     final response = await http.get(Uri.parse(imageUrl));
 
     if (response.statusCode == 200) {
@@ -73,8 +99,8 @@ class _DrawingPageState extends State<DrawingPage> {
   void drawCircle() {
     setState(() {
       final center = Offset(200, 200);
-      final radius = 50.0;
-      final numSegments = 360;
+      const radius = 50.0;
+      const numSegments = 360;
       final angleIncrement = (2 * 3.14159265359) / numSegments;
       final points = <Offset>[];
 
@@ -106,8 +132,8 @@ class _DrawingPageState extends State<DrawingPage> {
   void drawRectangle() {
     setState(() {
       final topLeft = Offset(100, 100);
-      final width = 100.0;
-      final height = 80.0;
+      const width = 100.0;
+      const height = 80.0;
       final points = <Offset>[
         topLeft,
         Offset(topLeft.dx + width, topLeft.dy),
@@ -154,6 +180,11 @@ class _DrawingPageState extends State<DrawingPage> {
 
   var selectedWidth = 2.0;
   @override
+  void initState() {
+    super.initState();
+    loadUserData(); // Call the function to load user data here
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -272,7 +303,7 @@ class _DrawingPageState extends State<DrawingPage> {
             right: 0,
             bottom: 200,
             child: RotatedBox(
-              quarterTurns: 3, // 270 degree
+              quarterTurns: 3,
               child: Slider(
                 value: selectedWidth,
                 min: 1,
@@ -329,8 +360,7 @@ class _DrawingPageState extends State<DrawingPage> {
             children: [
               const SizedBox(width: 8),
               FloatingActionButton(
-                onPressed:
-                    _pickImage, // Call the _pickImage function when the button is pressed
+                onPressed: _pickImage,
                 child: const Icon(Icons.image),
               ),
               const SizedBox(width: 8),
@@ -348,10 +378,10 @@ class _DrawingPageState extends State<DrawingPage> {
                               setState(() {
                                 selectedColor = color;
                               });
+                              saveUserData();
                             },
-                            showLabel: true, // Show the color value label
-                            pickerAreaHeightPercent:
-                                0.8, // Adjust the color wheel size
+                            showLabel: true,
+                            pickerAreaHeightPercent: 0.8,
                           ),
                         ),
                         actions: <Widget>[
@@ -366,8 +396,7 @@ class _DrawingPageState extends State<DrawingPage> {
                     },
                   );
                 },
-                child:
-                    Icon(Icons.palette), // Replace with your color wheel icon
+                child: Icon(Icons.palette),
               ),
               SizedBox(width: 8),
               FloatingActionButton(
