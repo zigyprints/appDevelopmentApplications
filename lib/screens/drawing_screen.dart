@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; // Import image_picker package for gallery access
 import 'package:provider/provider.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:app/model/drawing_screen_model.dart';
@@ -18,8 +21,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
   double strokeWidth = 5.0;
   bool isEraserMode = false;
   int _selectedIndex = 0; // Index for the selected bottom navigation item
-
-  
+  String? imagePath; // Store the path of the selected image
 
   @override
   Widget build(BuildContext context) {
@@ -29,18 +31,18 @@ class _DrawingScreenState extends State<DrawingScreen> {
       appBar: AppBar(
         title: Text('Drawing Screen'),
         actions: [
-         IconButton(
-          icon: Icon(Icons.undo),
-          onPressed: () {
-            drawingModel.undo(); // Call the undo method from your model
-          },
-        ),
-        IconButton(
-          icon: Icon(Icons.redo),
-          onPressed: () {
-            drawingModel.redo(); // Call the redo method from your model
-          },
-        ),
+          IconButton(
+            icon: Icon(Icons.undo),
+            onPressed: () {
+              drawingModel.undo(); // Call the undo method from your model
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.redo),
+            onPressed: () {
+              drawingModel.redo(); // Call the redo method from your model
+            },
+          ),
         ],
       ),
       body: Column(
@@ -72,6 +74,12 @@ class _DrawingScreenState extends State<DrawingScreen> {
               child: CustomPaint(
                 painter: DrawingPainter(points, currentColor, strokeWidth),
                 size: Size.infinite,
+                child: imagePath != null
+                    ? Image.file(
+                        File(imagePath!),
+                        fit: BoxFit.cover,
+                      )
+                    : SizedBox(),
               ),
             ),
           ),
@@ -133,8 +141,8 @@ class _DrawingScreenState extends State<DrawingScreen> {
                 },
               );
             } else if (index == 3) {
-              // Gallery icon selected (You can navigate to the gallery screen here)
-              // Implement gallery functionality or navigation as needed.
+              // Gallery icon selected
+              _pickImageFromGallery(); // Function to pick image from gallery
             }
           });
         },
@@ -175,4 +183,17 @@ class _DrawingScreenState extends State<DrawingScreen> {
       ),
     );
   }
+
+  // Function to pick an image from the gallery
+// Function to pick an image from the gallery
+  // Function to pick an image from the gallery
+  _pickImageFromGallery() async {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        imagePath = pickedFile.path;
+      });
+    }
+  }
+
 }
