@@ -29,16 +29,16 @@ Widget build(BuildContext context) {
 
   return Scaffold(
     appBar: AppBar(
-      title: Text('Drawing Screen'),
+      title: const Text('Drawing Screen'),
       actions: [
         IconButton(
-          icon: Icon(Icons.undo),
+          icon: const Icon(Icons.undo),
           onPressed: () {
             drawingModel.undo(); // Call the undo method from your model
           },
         ),
         IconButton(
-          icon: Icon(Icons.redo),
+          icon: const Icon(Icons.redo),
           onPressed: () {
             drawingModel.redo(); // Call the redo method from your model
           },
@@ -103,6 +103,8 @@ Widget build(BuildContext context) {
               _selectedIndex = 0; // Set the navbar index to Pencil
               points.clear(); // Clear all drawing points
               undonePoints.clear(); // Clear undone points
+              //remove the image
+              imagePath = null;
             });
           } else if (index == 0) {
             // Pencil icon selected
@@ -116,7 +118,7 @@ Widget build(BuildContext context) {
               context: context,
               builder: (BuildContext context) {
                 return AlertDialog(
-                  title: Text('Pick a color'),
+                  title: const Text('Pick a color'),
                   content: SingleChildScrollView(
                     child: ColorPicker(
                       pickerColor: currentColor,
@@ -130,7 +132,6 @@ Widget build(BuildContext context) {
                           undonePoints.clear(); // Clear undone points
                         });
                       },
-                      showLabel: true,
                       pickerAreaHeightPercent: 0.8,
                     ),
                   ),
@@ -139,7 +140,7 @@ Widget build(BuildContext context) {
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
-                      child: Text('OK'),
+                      child: const Text('OK'),
                     ),
                   ],
                 );
