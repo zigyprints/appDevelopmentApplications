@@ -35,3 +35,8 @@ Evaluation Criteria:
 Note: This assignment is designed to be completed within a week. However, feel free to allocate more time if needed. Submit your pull request before the deadline provided to be considered for the internship shortlisting.
 
 Good luck! We look forward to reviewing your work and potentially having you as part of our internship program. If you have any questions during the assignment, don't hesitate to reach out to us for clarification.
+
+
+MY EDIT : 
+- I faced issues including to add the image selector option, so I skipped it.
+- The process of learing to use the Gesture Detector widget this way was quite rewarding.
